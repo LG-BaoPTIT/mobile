@@ -1,10 +1,10 @@
+/* eslint-disable prettier/prettier */
 /**
  * @format
  */
 
-import {AppRegistry} from 'react-native';
+import { AppRegistry } from 'react-native';
+import { name as appName } from './app.json';
 import App from './App';
-import Login from './screens/login';
-import {name as appName} from './app.json';
 
-AppRegistry.registerComponent(appName, () => Login);
+AppRegistry.registerComponent(appName, () => App);
