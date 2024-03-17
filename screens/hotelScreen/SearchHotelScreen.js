@@ -42,7 +42,7 @@ function SearchHotelScreen() {
             onPress={() => {
                 setSearchText(item.name);
                 setSuggestions([]);
-                navigation.navigate('ListHotelScreen', { location: item.name });
+                navigation.navigate('ListHotelScreen', { location: item, minPrice: 0, maxPrice: Infinity, selectedRatings: [1,2,3,4,5]});
             }}
         >
             <Text style={styles.suggestionItemText}>{item.name}</Text>

@@ -1,33 +1,41 @@
 /* eslint-disable prettier/prettier */
 import React from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Footer from '../../components/Footer/Footer';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
-const hotels = [
+const data = [
     {
         id: 1,
-        name: 'Vinperl Da Nang',
+        name: 'Royal Family Hotel',
         score: 9.5,
-        rate: 4,
+        rate: 5,
+        minPrice: 2000000,
+        maxPrice: 10000000,
     },
     {
         id: 2,
-        name: 'Da Nang Han River',
-        score: 9.0,
-        rate: 3,
+        name: 'Vinperl Da Nang',
+        score: 9.5,
+        rate: 4,
+        minPrice: 400000,
+        maxPrice: 8000000,
     },
     {
         id: 3,
-        name: 'Merry Land Hotel Danang',
-        score: 8.0,
+        name: 'Da Nang Han River',
+        score: 9.0,
         rate: 3,
+        minPrice: 200000,
+        maxPrice: 5000000,
     },
     {
         id: 4,
-        name: 'Royal Family Hotel',
-        score: 10.0,
-        rate: 5,
+        name: 'Merry Land Hotel Danang',
+        score: 8.0,
+        rate: 3,
+        minPrice: 350000,
+        maxPrice: 6000000,
     },
 ];
 
@@ -35,59 +43,65 @@ function ListHotelScreen() {
 
     const navigation = useNavigation();
     const route = useRoute();
-    const { location } = route.params;
+    const { location, minPrice, maxPrice, selectedRatings } = route.params;
+    const hotels = data.filter(hotel => {
+        return selectedRatings.includes(hotel.rate) && !(hotel.minPrice > maxPrice) && !(hotel.maxPrice < minPrice);
+    });
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableWithoutFeedback onPress={() => navigation.navigate('SearchHotelScreen')}>
+                <TouchableOpacity onPress={() => navigation.navigate('SearchHotelScreen')}>
                     <Image
                         source={require('../../assets/icon/icon_back.png')}
                         style={styles.icon}
                     />
-                </TouchableWithoutFeedback>
-                <Text style={styles.labelHeader}>{location} </Text>
-                <Image
-                    source={require('../../assets/icon/icon_filter.png')}
-                    style={styles.icon}
-                />
+                </TouchableOpacity>
+                <Text style={styles.labelHeader}>{location.name} </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('FilterHotelScreen', { location: location })}>
+                    <Image
+                        source={require('../../assets/icon/icon_filter.png')}
+                        style={styles.icon}
+                    />
+                </TouchableOpacity>
             </View>
             <ScrollView style={styles.listHotel}>
                 {hotels.map(hotel => (
-                    <View key={hotel.id} style={styles.itemHotel}>
-                        <Image
-                            source={require('../../assets/image/hotel/vinperl-da-nang.jpg')}
-                            style={styles.hotelImage}
-                        />
-
-                        <View style={styles.hotel}>
-                            <View style={styles.hotelInfor}>
-                                <Text style={styles.hotelName}>{hotel.name}</Text>
-                                <Text style={styles.hotelRate}>{hotel.score}</Text>
-                            </View>
-                            <View style={styles.hotelStar}>
-                            {[...Array(hotel.rate)].map((_, index) => (
+                    <TouchableOpacity key={hotel.id} onPress={() => navigation.navigate('HotelDetailScreen', { location: location })}>
+                        <View style={styles.itemHotel}>
+                            <Image
+                                source={require('../../assets/image/hotel/vinperl-da-nang.jpg')}
+                                style={styles.hotelImage}
+                            />
+                            <View style={styles.hotel}>
+                                <View style={styles.hotelInfor}>
+                                    <Text style={styles.hotelName}>{hotel.name}</Text>
+                                    <Text style={styles.hotelRate}>{hotel.score}</Text>
+                                </View>
+                                <View style={styles.hotelStar}>
+                                    {[...Array(hotel.rate)].map((_, index) => (
+                                        <Image
+                                            key={index}
+                                            source={require('../../assets/icon/icon_star.png')}
+                                            style={styles.iconStar}
+                                        />
+                                    ))}
+                                    {[...Array(5 - hotel.rate)].map((_, index) => (
+                                        <Image
+                                            key={index}
+                                            source={require('../../assets/icon/icon_star.png')}
+                                            style={styles.iconStarEmpty}
+                                        />
+                                    ))}
+                                </View>
+                                <View style={styles.hotelAddress}>
                                     <Image
-                                        key={index}
-                                        source={require('../../assets/icon/icon_star.png')}
-                                        style={styles.iconStar}
+                                        source={require('../../assets/icon/icon_gps.png')}
                                     />
-                                ))}
-                                {[...Array(5 - hotel.rate)].map((_, index) => (
-                                    <Image
-                                        key={index}
-                                        source={require('../../assets/icon/icon_star.png')}
-                                        style={styles.iconStarEmpty}
-                                    />
-                                ))}
-                            </View>
-                            <View style={styles.hotelAddress}>
-                                <Image
-                                    source={require('../../assets/icon/icon_gps.png')}
-                                />
-                                <Text style={styles.addressName}> Đà Nẵng</Text>
+                                    <Text style={styles.addressName}> Đà Nẵng</Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
+                    </TouchableOpacity>
                 ))}
             </ScrollView>
             <Footer />

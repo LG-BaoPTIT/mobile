@@ -1,35 +1,37 @@
 /* eslint-disable prettier/prettier */
 import React from 'react';
-import { StyleSheet, View, Text, Image, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native';
 import Footer from '../components/Footer/Footer';
-import { useNavigation  } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 function MainScreen() {
 
-    const navigation = useNavigation();
+  const navigation = useNavigation();
 
-    return (
-        <View style={styles.container}>
-        <View style={styles.navBar}>
-            <TouchableWithoutFeedback onPress={() => navigation.navigate('SearchHotelScreen')}>
-            <View style={styles.navBarItem}>
-                <Image
-                source={require('../assets/icon/icon_hotel.png')}
-                style={styles.icon}
-                />
-                <Text>Tìm khách sạn</Text>
-            </View>
-            </TouchableWithoutFeedback>
-            <View style={styles.navBarItem}>
+  return (
+    <View style={styles.container}>
+      <View style={styles.navBar}>
+        <TouchableOpacity onPress={() => navigation.navigate('SearchHotelScreen')}>
+          <View style={styles.navBarItem}>
             <Image
-                source={require('../assets/icon/icon_flight.png')}
-                style={styles.icon}
+              source={require('../assets/icon/icon_hotel.png')}
+              style={styles.icon}
+            />
+            <Text>Tìm khách sạn</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <View style={styles.navBarItem}>
+            <Image
+              source={require('../assets/icon/icon_flight.png')}
+              style={styles.icon}
             />
             <Text>Đặt máy bay</Text>
-            </View>
-        </View>
-        <Footer />
-        </View>
-    );
+          </View>
+        </TouchableOpacity>
+      </View>
+      <Footer />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -45,7 +47,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-around',
-    padding: 10,
+    paddingTop: 20,
   },
   navBarItem: {
     display: 'flex',

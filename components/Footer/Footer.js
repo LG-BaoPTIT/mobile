@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 
-import { Image, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React  from 'react';
 import { useNavigation } from '@react-navigation/native';
 function Footer() {
@@ -9,7 +9,7 @@ function Footer() {
 
     return (
         <View style={styles.footer}>
-            <TouchableWithoutFeedback onPress={() => navigation.navigate('MainScreen')}>
+            <TouchableOpacity onPress={() => navigation.navigate('MainScreen')}>
                 <View style={styles.footerItem}>
                     <Image
                         source={require('../../assets/icon/icon_home.png')}
@@ -17,14 +17,16 @@ function Footer() {
                     />
                     <Text>Home</Text>
                 </View>
-            </TouchableWithoutFeedback>
-            <View style={styles.footerItem}>
-                <Image
-                    source={require('../../assets/icon/icon_calender.png')}
-                    style={styles.icon}
-                />
-                <Text>Calender</Text>
-            </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('ManageBookingScreen')}>
+                <View style={styles.footerItem}>
+                    <Image
+                        source={require('../../assets/icon/icon_calender.png')}
+                        style={styles.icon}
+                    />
+                    <Text>Calender</Text>
+                </View>
+            </TouchableOpacity>
             <View style={styles.footerItem}>
                 <Image
                     source={require('../../assets/icon/icon_search.png')}
