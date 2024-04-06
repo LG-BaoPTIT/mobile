@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native';
 import Footer from '../components/Footer/Footer';
 import { useNavigation } from '@react-navigation/native';
+import { TouchableWithoutFeedback } from 'react-native';
 function MainScreen() {
   const navigation = useNavigation();
 
