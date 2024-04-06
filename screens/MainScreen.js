@@ -1,33 +1,67 @@
-/* eslint-disable prettier/prettier */
 import React from 'react';
 import { StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native';
 import Footer from '../components/Footer/Footer';
 import { useNavigation } from '@react-navigation/native';
 function MainScreen() {
-
   const navigation = useNavigation();
+
+  const handleLogout = () => {
+    // Thực hiện các hành động cần thiết để đăng xuất khỏi ứng dụng
+    console.log('Đăng xuất thành công!');
+    navigation.navigate('LoginScreen')
+    // Ví dụ: navigation.navigate('LoginScreen');
+  };
 
   return (
     <View style={styles.container}>
+      <View style={styles.userInfo}>
+       <View style={{flexDirection: 'row', alignItems:'center'}}>
+       <Image
+          source={require('../assets/hero2.jpg')}
+          style={styles.avatar}
+        />
+        <Text style={styles.username}>Lưu Gia Bảo</Text>
+       </View>
+        <TouchableWithoutFeedback onPress={handleLogout}>
+          <View style={styles.logoutButton}>
+            <Image
+              source={require('../assets/logout.png')}
+              style={styles.logoutIcon}
+            />
+            <Text style={styles.logoutText}>Đăng xuất</Text>
+          </View>
+        </TouchableWithoutFeedback>
+      </View>
       <View style={styles.navBar}>
-        <TouchableOpacity onPress={() => navigation.navigate('SearchHotelScreen')}>
+        <TouchableWithoutFeedback onPress={() => navigation.navigate('SearchHotelScreen')}>
           <View style={styles.navBarItem}>
             <Image
               source={require('../assets/icon/icon_hotel.png')}
               style={styles.icon}
             />
-            <Text>Tìm khách sạn</Text>
+            <Text style={styles.navBarText}>Tìm khách sạn</Text>
           </View>
-        </TouchableOpacity>
-        <TouchableOpacity>
+        </TouchableWithoutFeedback>
+        
+        <TouchableWithoutFeedback onPress={() => navigation.navigate('BookFlightTickets')}>
           <View style={styles.navBarItem}>
             <Image
               source={require('../assets/icon/icon_flight.png')}
               style={styles.icon}
             />
-            <Text>Đặt máy bay</Text>
+            <Text style={styles.navBarText}>Đặt vé máy bay</Text>
           </View>
-        </TouchableOpacity>
+        </TouchableWithoutFeedback>
+        
+        <TouchableWithoutFeedback onPress={() => navigation.navigate('MyListTickets')}>
+          <View style={styles.navBarItem}>
+            <Image
+              source={require('../assets/icon/ticket.png')}
+              style={styles.icon}
+            />
+            <Text style={styles.navBarText}>Vé đã mua</Text>
+          </View>
+        </TouchableWithoutFeedback>
       </View>
       <Footer />
     </View>
@@ -37,23 +71,20 @@ function MainScreen() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#24BAEC',
-    width: '100%',
-    height: '100%',
+    flex: 1,
   },
   navBar: {
+    marginHorizontal: 20,
     backgroundColor: 'white',
-    width: '100%',
     height: 90,
-    display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingTop: 20,
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderRadius: 10,
   },
   navBarItem: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignContent: 'center',
+    flex: 1,
     alignItems: 'center',
   },
   icon: {
@@ -61,7 +92,43 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
   },
-
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between', // Đảm bảo nút đăng xuất và tên người dùng đều được đặt cạnh nhau
+    marginHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20, 
+  },
+  username: {
+    marginLeft: 10,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoutIcon: {
+    tintColor: 'white',
+    width: 20,
+    height: 20,
+    marginRight: 5,
+  },
+  logoutText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  navBarText: {
+    marginTop: 5,
+    color: '#24BAEC',
+  },
 });
 
 export default MainScreen;
