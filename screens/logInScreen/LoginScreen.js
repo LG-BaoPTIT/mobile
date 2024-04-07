@@ -43,28 +43,34 @@ const LoginScreen = ({navigation}) => {
     })
       .then(response => {
         if (!response.ok) {
-          throw new Error('Tên đăng nhập hoặc mật khẩu không đúng.');
+          console.log(response);
+          // throw new Error('Tên đăng nhập hoặc mật khẩu không đúng.');
         }
         return response.json();
       })
       .then(async data => {
         try {
+          if (!data.jwtToken) {
+            throw new Error('Không thể lấy được token từ máy chủ.');
+          }
           // Lưu token và thông tin người dùng vào AsyncStorage
           await AsyncStorage.setItem('jwtToken', data.jwtToken);
           await AsyncStorage.setItem('user', JSON.stringify(data.userDTO));
-          
+          setPassword('');
+          setUsername('');
           // Chuyển hướng đến màn hình chính
           navigation.navigate('MainScreen');
+
         } catch (error) {
-          console.error('Lỗi khi lưu dữ liệu vào AsyncStoragee:', error);
+          // console.error('Lỗi khi lưu dữ liệu vào AsyncStoragee:', error);
           // Xử lý lỗi (nếu cần)
-          setError('Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại sau.');
+          setError(data.message);
         }
       })
       .catch(error => {
-        console.error('Lỗi khi gửi yêu cầu fetch:', error);
+        // console.error('Lỗi khi gửi yêu cầu fetch:', error);
         // Xử lý lỗi (nếu cần)
-        setError(error.message);
+        // setError(error.message);
       });
   };
   const handleForgotPassword = () => {
@@ -84,9 +90,11 @@ const LoginScreen = ({navigation}) => {
   };
   const clearUsernameError = () => {
     setUsernameError('');
+    setError('');
   };
   const clearPasswordError = () => {
     setPasswordError('');
+    setError('');
   };
   return (
     <View style={styles.container}>
