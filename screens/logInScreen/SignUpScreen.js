@@ -23,7 +23,7 @@ const SignUpScreen = ({navigation}) => {
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [successModalVisible, setSuccessModalVisible] = useState(false); // State to control success modal visibility
   const [successMessage, setSuccessMessage] = useState(''); // State to store success message
-  const URl_API = 'http://localhost:8080';
+  const URl_API = 'http://192.168.48.1:8080';
   const handleInputChange = inputName => {
     switch (inputName) {
       case 'name':
@@ -128,11 +128,11 @@ const SignUpScreen = ({navigation}) => {
     // Thực hiện xác nhận và xử lý đăng ký tại đây
   };
   const sendDataToServer = userData => {
-    fetch('http://localhost:8080/api/v1/user/signup', {
+    fetch(`${URl_API}/api/v1/user/signup`, { 
       method: 'POST',
-      credentials: 'include',
+      //credentials: 'include',
       headers: {
-        "access-control-allow-origin" : "http://localhost:8080/*",
+        //"access-control-allow-origin" : "http://localhost:8080/*",
       
         'Content-Type': 'application/json',
       },
