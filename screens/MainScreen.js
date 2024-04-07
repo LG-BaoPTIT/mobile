@@ -1,28 +1,57 @@
 import React from 'react';
-import { StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native';
+import {StyleSheet, View, Text, Image, TouchableOpacity} from 'react-native';
 import Footer from '../components/Footer/Footer';
-import { useNavigation } from '@react-navigation/native';
-import { TouchableWithoutFeedback } from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import {TouchableWithoutFeedback} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 function MainScreen() {
   const navigation = useNavigation();
 
   const handleLogout = () => {
     // Thực hiện các hành động cần thiết để đăng xuất khỏi ứng dụng
     console.log('Đăng xuất thành công!');
-    navigation.navigate('LoginScreen')
-    // Ví dụ: navigation.navigate('LoginScreen');
-  };
 
+    clearAsyncStorageOnLogout();
+    navigation.navigate('LoginScreen');
+  };
+  const displayAsyncStorageContents = async () => {
+    try {
+      // Lấy danh sách tất cả các khóa đã được lưu
+      const keys = await AsyncStorage.getAllKeys();
+
+      // Lấy giá trị của từng khóa và hiển thị
+      for (const key of keys) {
+        const value = await AsyncStorage.getItem(key);
+        console.log(`Khóa: ${key}, Giá trị: ${value}`);
+      }
+    } catch (error) {
+      console.error('Lỗi khi hiển thị dữ liệu từ AsyncStorage:', error);
+    }
+  };
+  const clearAsyncStorageOnLogout = async () => {
+    try {
+      // Lấy danh sách tất cả các khóa đã được lưu
+      const keys = await AsyncStorage.getAllKeys();
+
+      // Xóa giá trị của từng khóa
+      await AsyncStorage.multiRemove(keys);
+
+      console.log('Đã xóa các giá trị trong AsyncStorage khi đăng xuất.');
+    } catch (error) {
+      console.error('Lỗi khi xóa dữ liệu từ AsyncStorage:', error);
+    }
+  };
   return (
     <View style={styles.container}>
       <View style={styles.userInfo}>
-       <View style={{flexDirection: 'row', alignItems:'center'}}>
-       <Image
-          source={require('../assets/hero2.jpg')}
-          style={styles.avatar}
-        />
-        <Text style={styles.username}>Lưu Gia Bảo</Text>
-       </View>
+        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+          <Image
+            source={require('../assets/hero2.jpg')}
+            style={styles.avatar}
+          />
+          <Text style={styles.username}>Lưu Gia Bảo</Text>
+        </View>
         <TouchableWithoutFeedback onPress={handleLogout}>
           <View style={styles.logoutButton}>
             <Image
@@ -34,7 +63,8 @@ function MainScreen() {
         </TouchableWithoutFeedback>
       </View>
       <View style={styles.navBar}>
-        <TouchableWithoutFeedback onPress={() => navigation.navigate('SearchHotelScreen')}>
+        <TouchableWithoutFeedback
+          onPress={() => navigation.navigate('SearchHotelScreen')}>
           <View style={styles.navBarItem}>
             <Image
               source={require('../assets/icon/icon_hotel.png')}
@@ -43,8 +73,9 @@ function MainScreen() {
             <Text style={styles.navBarText}>Tìm khách sạn</Text>
           </View>
         </TouchableWithoutFeedback>
-        
-        <TouchableWithoutFeedback onPress={() => navigation.navigate('BookFlightTickets')}>
+
+        <TouchableWithoutFeedback
+          onPress={() => navigation.navigate('BookFlightTickets')}>
           <View style={styles.navBarItem}>
             <Image
               source={require('../assets/icon/icon_flight.png')}
@@ -53,8 +84,9 @@ function MainScreen() {
             <Text style={styles.navBarText}>Đặt vé máy bay</Text>
           </View>
         </TouchableWithoutFeedback>
-        
-        <TouchableWithoutFeedback onPress={() => navigation.navigate('MyListTickets')}>
+
+        <TouchableWithoutFeedback
+          onPress={() => navigation.navigate('MyListTickets')}>
           <View style={styles.navBarItem}>
             <Image
               source={require('../assets/icon/ticket.png')}
@@ -104,7 +136,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 40,
     height: 40,
-    borderRadius: 20, 
+    borderRadius: 20,
   },
   username: {
     marginLeft: 10,
