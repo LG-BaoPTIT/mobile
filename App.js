@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -22,12 +23,13 @@ import SignUpScreen from './screens/logInScreen/SignUpScreen';
 import SplashScreen from './screens/SplashScreen';
 import { useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import UpdateBookingScreen from './screens/bookingRoomScreen/UpdateBookingScreen';
 
 
 const Stack = createNativeStackNavigator();
 
 function App() {
-  
+
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="SplashScreen" screenOptions={{ headerShown: false }}>
@@ -49,6 +51,7 @@ function App() {
         <Stack.Screen name="ListRoomScreen" component={ListRoomScreen} />
         <Stack.Screen name="BookingRoomScreen" component={BookingRoomScreen} />
         <Stack.Screen name="ManageBookingScreen" component={ManageBookingScreen} />
+        <Stack.Screen name="UpdateBookingScreen" component={UpdateBookingScreen} />
         <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
       </Stack.Navigator>
     </NavigationContainer>

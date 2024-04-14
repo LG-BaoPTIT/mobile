@@ -4,67 +4,30 @@ import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Footer from '../../components/Footer/Footer';
 
-const rooms = [
-    {
-        id: 1,
-        name: 'Deluxe Twin Room',
-        area: 40.0,
-        numberPeople: 3,
-        bigBed: 1,
-        smallBed: 1,
-        bathtub: true,
-        price: 2000000,
-        fee: 0.2,
-    },
-    {
-        id: 2,
-        name: 'Superior Double Room',
-        area: 46.0,
-        numberPeople: 3,
-        bigBed: 1,
-        smallBed: 0,
-        bathtub: true,
-        price: 3000000,
-        fee: 0.15,
-    },
-    {
-        id: 3,
-        name: 'Royal Ocean View with Bathtub',
-        area: 52.0,
-        numberPeople: 2,
-        bigBed: 1,
-        smallBed: 0,
-        bathtub: true,
-        price: 5000000,
-        fee: 0.2,
-    },
-    {
-        id: 4,
-        name: 'Family Suite',
-        area: 80.0,
-        numberPeople: 6,
-        bigBed: 2,
-        smallBed: 2,
-        bathtub: true,
-        price: 7000000,
-        fee: 0.2,
-    },
-];
-
 function ListRoomScreen() {
     const navigation = useNavigation();
     const route = useRoute();
     const { hotel, location } = route.params;
+    const rooms = hotel.rooms;
+
+    const shortenName = (name, maxLength) => {
+        if (name.length > maxLength) {
+            return name.slice(0, maxLength - 3) + '...';
+        } else {
+            return name;
+        }
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.navigate('HotelDetailScreen', { location: location })}>
+                <TouchableOpacity onPress={() => navigation.navigate('HotelDetailScreen', { location: location, hotelId:hotel.id })}>
                     <Image
                         source={require('../../assets/icon/icon_back.png')}
                         style={styles.iconHeader}
                     />
                 </TouchableOpacity>
-                <Text style={styles.labelHeader}>{hotel.name} </Text>
+                <Text style={styles.labelHeader}>{shortenName(hotel.name, 30)} </Text>
             </View>
             <ScrollView style={styles.listRoom}>
                 {rooms.map(room => (
@@ -105,7 +68,7 @@ function ListRoomScreen() {
                                         source={require('../../assets/icon/icon_bathtub.png')}
                                         style={styles.informationIcon}
                                     />
-                                    <Text style={styles.informationValue}> {room.bathtub ? 'Có bồn tắm' : 'Không có bồn tắm'}</Text>
+                                    <Text style={styles.informationValue}> {room.bathtub ? 'Có bồn tắm' : 'Vòi tắm đứng'}</Text>
                                 </View>
                             </View>
                             <View style={styles.rightBlock}>

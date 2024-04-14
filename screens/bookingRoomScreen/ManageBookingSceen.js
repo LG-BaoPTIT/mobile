@@ -1,145 +1,36 @@
 /* eslint-disable prettier/prettier */
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Footer from '../../components/Footer/Footer';
 import Modal from 'react-native-modal';
-
-const data = [
-    {
-        id: 1,
-        hotel: {
-            id: 1,
-            name: 'Royal Family Hotel',
-            score: 9.5,
-            rate: 5,
-            minPrice: 2000000,
-            maxPrice: 10000000,
-            timeCheckin: '14:00',
-            timeCheckout: '12:00',
-        },
-        room: {
-            id: 1,
-            name: 'Deluxe Twin Room',
-            area: 40.0,
-            numberPeople: 3,
-            bigBed: 1,
-            smallBed: 1,
-            bathtub: true,
-            price: 2000000,
-            fee: 0.2,
-        },
-        checkInDate: '2024-03-17T10:29:00.000Z',
-        checkOutDate: '2024-03-19T10:29:00.000Z',
-        userName: 'Lê Văn Dũng',
-        phoneNumber: '0837633760',
-        email: 'dung2892002ts@gmail.com',
-        status: 'Chưa thanh toán',
-    },
-    {
-        id: 2,
-        hotel: {
-            id: 1,
-            name: 'Royal Family Hotel',
-            score: 9.5,
-            rate: 5,
-            minPrice: 2000000,
-            maxPrice: 10000000,
-            timeCheckin: '14:00',
-            timeCheckout: '12:00',
-        },
-        room: {
-            id: 2,
-            name: 'Superior Double Room',
-            area: 46.0,
-            numberPeople: 3,
-            bigBed: 1,
-            smallBed: 0,
-            bathtub: true,
-            price: 3000000,
-            fee: 0.15,
-        },
-        checkInDate: '2024-03-19T10:29:00.000Z',
-        checkOutDate: '2024-03-25T10:29:00.000Z',
-        userName: 'Lưu Gia Bảo',
-        phoneNumber: '0123456789',
-        email: 'baoptit@gmail.com',
-        status: 'Đã thanh toán',
-    },
-    {
-        id: 3,
-        hotel: {
-            id: 1,
-            name: 'Royal Family Hotel',
-            score: 9.5,
-            rate: 5,
-            minPrice: 2000000,
-            maxPrice: 10000000,
-            timeCheckin: '14:00',
-            timeCheckout: '12:00',
-        },
-        room: {
-            id: 4,
-            name: 'Family Suite',
-            area: 80.0,
-            numberPeople: 6,
-            bigBed: 2,
-            smallBed: 2,
-            bathtub: true,
-            price: 7000000,
-            fee: 0.2,
-        },
-        checkInDate: '2024-03-22T10:29:00.000Z',
-        checkOutDate: '2024-03-29T10:29:00.000Z',
-        userName: 'Dương Xuân Đạt',
-        phoneNumber: '0246813579',
-        email: 'datbg2002@gmail.com',
-        status: 'Chưa thanh toán',
-    },
-];
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Picker } from '@react-native-picker/picker';
 
 function ManageBookingScreen() {
     const navigation = useNavigation();
-    const route = useRoute();
-
-    const [bookings, setBookings] = useState(data);
+    const [bookings, setBookings] = useState();
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState(null);
-    const [completedBooking, setCompletedBooking] = useState(null);
-
-
-    useEffect(() => {
-        if (route.params && route.params.newBooking) {
-            const newBooking = route.params.newBooking;
-            setBookings(prevBookings => [newBooking, ...prevBookings]);
-        }
-    }, [route.params]);
+    const [selectedStatus, setSelectedStatus] = useState('all');
+    const isFocused = useIsFocused();
+    const URl_API = 'http://192.168.2.24:8080';
 
     useEffect(() => {
-        if (route.params && route.params.completedBooking) {
-            setCompletedBooking(route.params.completedBooking);
+        fetchBookingByUser();
+    },[isFocused]);
+    const fetchBookingByUser = async () => {
+        try {
+            const userData = await AsyncStorage.getItem('user');
+            const user = JSON.parse(userData);
+            const response = await fetch(`${URl_API}/api/v1/booking/user/${user.id}`);
+            const data = await response.json();
+            setBookings(data.reverse());
+        } catch (error) {
+            console.error('Error fetching hotels:', error);
         }
-    }, [route.params]);
-
-
-    useEffect(() => {
-        if (completedBooking) {
-            setBookings(prevBookings => {
-                const completedBookingId = completedBooking.id;
-                return prevBookings.map(booking => {
-                    if (booking.id === completedBookingId) {
-                        return {
-                            ...booking,
-                            status: 'Đã thanh toán',
-                        };
-                    }
-                    return booking;
-                });
-            });
-        }
-    }, [completedBooking]);
-
+    };
     const calculateNumberOfDays = (date1, date2) => {
         const start = moment(date1);
         const end = moment(date2);
@@ -156,15 +47,24 @@ function ManageBookingScreen() {
 
     };
 
-    const handleCancelBooking = (id) => {
-        const updatedBookings = bookings.map(booking => {
-            if (booking.id === id) {
-                return { ...booking, status: 'Đã hủy' };
+    const handleCancelBooking = async (id) => {
+        try {
+            const response = await fetch(`${URl_API}/api/v1/booking/cancel/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (!response.ok) {
+                throw new Error('Failed to cancel booking');
             }
-            return booking;
-        });
-        setBookings(updatedBookings);
-        setModalVisible(false);
+            const data = await response.text();
+            console.log(data);
+            fetchBookingByUser();
+            toggleModal();
+        } catch (error) {
+            console.error('Error cancelling booking:', error);
+        }
     };
 
     const showModel = (booking) => {
@@ -175,6 +75,16 @@ function ManageBookingScreen() {
     const toggleModal = () => {
         setModalVisible(!modalVisible);
     };
+
+    // eslint-disable-next-line no-shadow
+    const filterBookingsByStatus = (bookings, status) => {
+        if (status === 'all') {
+            return bookings;
+        }
+        return bookings.filter(booking => booking.status === status);
+    };
+
+    const filteredBookings = filterBookingsByStatus(bookings, selectedStatus);
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -185,20 +95,32 @@ function ManageBookingScreen() {
                     />
                 </TouchableOpacity>
                 <Text style={styles.labelHeader}>Quản lý đặt phòng</Text>
+                <Picker
+                    selectedValue={selectedStatus}
+                    // eslint-disable-next-line react-native/no-inline-styles
+                    style={{ height: 50, width: 150 }}
+                    onValueChange={(itemValue) => setSelectedStatus(itemValue)}>
+                    <Picker.Item label="Tất cả" value="all" />
+                    <Picker.Item label="Đã hủy" value="Đã hủy" />
+                    <Picker.Item label="Đã thanh toán" value="Đã thanh toán" />
+                    <Picker.Item label="Chưa thanh toán" value="Chưa thanh toán" />
+                </Picker>
+
             </View>
             <ScrollView style={styles.list}>
-                {bookings.map(booking => (
-                    <View key={booking.id} style={styles.itemBooking}>
+                {filteredBookings?.map(booking => (
+                    <TouchableOpacity key={booking.id} onPress={() => navigation.navigate('UpdateBookingScreen', { booking: booking })}>
+                        <View style={styles.itemBooking}>
                         <Text style={styles.name}>Khách sạn: {booking.hotel.name}</Text>
                         <Text style={styles.name}>Phòng: {booking.room.name}</Text>
                         <View style={styles.timeDetail}>
                             <View style={styles.time}>
                                 <Text style={styles.timeContent}>Nhận phòng: </Text>
-                                <Text style={styles.timeContent}>{booking.hotel.timeCheckin}, {moment(booking.checkInDate).format('DD/MM/YYYY')}</Text>
+                                <Text style={styles.timeContent}>{booking.hotel.checkIn}, {moment(booking.checkInDate).format('DD/MM/YYYY')}</Text>
                             </View>
                             <View style={styles.time}>
                                 <Text style={styles.timeContent}>Trả phòng: </Text>
-                                <Text style={styles.timeContent}>{booking.hotel.timeCheckout}, {moment(booking.checkOutDate).format('DD/MM/YYYY')}</Text>
+                                <Text style={styles.timeContent}>{booking.hotel.checkOut}, {moment(booking.checkOutDate).format('DD/MM/YYYY')}</Text>
                             </View>
                         </View>
                         <View style={styles.itemDetail}>
@@ -241,6 +163,7 @@ function ManageBookingScreen() {
                             </View>
                         </Modal>
                     </View>
+                    </TouchableOpacity>
                 ))}
             </ScrollView>
             <Footer />

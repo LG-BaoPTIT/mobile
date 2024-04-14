@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import React, {useState} from 'react';
 import {
   StyleSheet,
@@ -23,7 +24,7 @@ const SignUpScreen = ({navigation}) => {
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [successModalVisible, setSuccessModalVisible] = useState(false); // State to control success modal visibility
   const [successMessage, setSuccessMessage] = useState(''); // State to store success message
-  const URl_API = 'http://localhost:8080';
+  const URl_API = 'http://192.168.2.24:8080';
   const handleInputChange = inputName => {
     switch (inputName) {
       case 'name':
@@ -119,7 +120,6 @@ const SignUpScreen = ({navigation}) => {
 
     if (check) {
       sendDataToServer(userData);
-      
       //console.log('Đăng ký thành công!');
     } else {
       console.log('Đăng ký thaast !');
@@ -128,12 +128,12 @@ const SignUpScreen = ({navigation}) => {
     // Thực hiện xác nhận và xử lý đăng ký tại đây
   };
   const sendDataToServer = userData => {
-    fetch('http://localhost:8080/api/v1/user/signup', {
+    fetch(`${URl_API}/api/v1/user/signup`, {
       method: 'POST',
-      credentials: 'include',
+      //credentials: 'include',
       headers: {
-        "access-control-allow-origin" : "http://localhost:8080/*",
-      
+        //"access-control-allow-origin" : "http://localhost:8080/*",
+
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(userData),
@@ -280,7 +280,7 @@ const SignUpScreen = ({navigation}) => {
             <Text style={styles.successMessage}>{successMessage}</Text>
             <TouchableOpacity
               style={styles.modalButton}
-              onPress={() => {setSuccessModalVisible(false);navigation.navigate('LoginScreen')}}>
+              onPress={() => {setSuccessModalVisible(false); navigation.navigate('LoginScreen');}}>
               <Text style={styles.modalButtonText}>Đăng nhập</Text>
             </TouchableOpacity>
           </View>
@@ -294,7 +294,6 @@ const SignUpScreen = ({navigation}) => {
       <TouchableOpacity onPress={() => navigation.navigate('LoginScreen')}>
         <Text style={styles.linkText}>Quay lại đăng nhập</Text>
       </TouchableOpacity>
-  
     </View>
   );
 };

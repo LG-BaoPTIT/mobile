@@ -7,19 +7,18 @@ import moment from 'moment';
 import Modal from 'react-native-modal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-function BookingRoomScreen() {
-
+function UpdateBookingScreen() {
     const navigation = useNavigation();
     const route = useRoute();
-    const { hotel, room, location } = route.params;
+    const { booking } = route.params;
     const [checkInVisible, setCheckInVisible] = useState(false);
     const [checkOutVisible, setCheckOutVisible] = useState(false);
-    const [checkInDate, setCheckInDate] = useState(null);
-    const [checkOutDate, setCheckOutDate] = useState(null);
+    const [checkInDate, setCheckInDate] = useState(booking.checkInDate);
+    const [checkOutDate, setCheckOutDate] = useState(booking.checkOutDate);
     const [bookings, setBookings] = useState([]);
-    const [name, setName] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [email, setEmail] = useState('');
+    const [name, setName] = useState(booking.customerName);
+    const [phoneNumber, setPhoneNumber] = useState(booking.phoneNumber);
+    const [email, setEmail] = useState(booking.email);
     const [bookingResult, setBookingResult] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const URl_API = 'http://192.168.2.24:8080';
@@ -36,6 +35,11 @@ function BookingRoomScreen() {
     };
     const handleCheckInConfirm = (selectedDate) => {
         setCheckInDate(selectedDate);
+        if (checkOutDate && moment(selectedDate) >= moment(checkOutDate)) {
+            setBookingResult('Thời gian trả phòng phải sau thời gian nhận phòng');
+        } else {
+            setBookingResult(null);
+        }
         hideCheckInDatePicker();
     };
 
@@ -49,6 +53,11 @@ function BookingRoomScreen() {
 
     const handleCheckOutConfirm = (selectedDate) => {
         setCheckOutDate(selectedDate);
+        if (checkInDate && moment(checkInDate) >= moment(selectedDate)) {
+            setBookingResult('Thời gian trả phòng phải sau thời gian nhận phòng');
+        } else {
+            setBookingResult(null);
+        }
         hideCheckOutDatePicker();
     };
 
@@ -63,29 +72,27 @@ function BookingRoomScreen() {
 
     const calculatePrice = () => {
         if (calculateNumberOfDays()) {
-            return calculateNumberOfDays() * room.price;
+            return calculateNumberOfDays() * booking.room.price;
         }
     };
 
     const calculateFee = () => {
         if (calculatePrice()) {
-            return calculatePrice() * room.fee;
+            return calculatePrice() * booking.room.fee;
         }
     };
-
     const fetchBookingByRoom = useCallback(async () => {
         try {
-            const response = await fetch(`${URl_API}/api/v1/booking/room/${room.id}`);
+            const response = await fetch(`${URl_API}/api/v1/booking/room/${booking.room.id}`);
             const data = await response.json();
             setBookings(data);
         } catch (error) {
             console.error('Error fetching hotels:', error);
         }
-    }, [room.id, setBookings]);
+    }, [booking.room.id, setBookings]);
     useEffect(() => {
         fetchBookingByRoom();
     }, [fetchBookingByRoom]);
-
     const handleSubmit = async () => {
         if (moment(checkInDate) >= moment(checkOutDate)) {
             setBookingResult('Thời gian trả phòng phải sau thời gian nhận phòng');
@@ -97,11 +104,14 @@ function BookingRoomScreen() {
         console.log('Ngày checkIn:' + moment(checkInDate));
         console.log('Ngày checkOut:' + moment(checkOutDate));
         if (bookings.length > 0) {
-            for (let booking of bookings) {
-                console.log('Ngày checkIn của booking: ' + moment(booking.checkInDate));
-                console.log('Ngày checkOut của booking: ' + moment(booking.checkInDate));
-                const bookingCheckIn = moment(booking.checkInDate);
-                const bookingCheckOut = moment(booking.checkOutDate);
+            for (let bookingItem of bookings) {
+                if (bookingItem.id === booking.id) {
+                    continue;
+                }
+                console.log('Ngày checkIn của booking: ' + moment(bookingItem.checkInDate));
+                console.log('Ngày checkOut của booking: ' + moment(bookingItem.checkInDate));
+                const bookingCheckIn = moment(bookingItem.checkInDate);
+                const bookingCheckOut = moment(bookingItem.checkOutDate);
                 if (
                     (moment(checkInDate).isSameOrBefore(bookingCheckIn) && moment(checkOutDate).isSameOrAfter(bookingCheckIn)) ||
                     (moment(checkInDate).isSameOrBefore(bookingCheckOut) && moment(checkOutDate).isSameOrAfter(bookingCheckOut)) ||
@@ -121,7 +131,7 @@ function BookingRoomScreen() {
         const userData = await AsyncStorage.getItem('user');
         const user = JSON.parse(userData);
         const bookingRequest = {
-            roomId: room.id,
+            roomId: booking.room.id,
             checkInDate: serializeDate(checkInDate),
             checkOutDate: serializeDate(checkOutDate),
             customerName: name,
@@ -133,8 +143,8 @@ function BookingRoomScreen() {
         console.log('bookingRequest: ', bookingRequest);
 
         try {
-            const response = await fetch(`${URl_API}/api/v1/booking/save`, {
-                method: 'POST',
+            const response = await fetch(`${URl_API}/api/v1/booking/update/${booking.id}`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -142,11 +152,11 @@ function BookingRoomScreen() {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to save booking');
+                throw new Error('Failed to update booking');
             }
 
             const responseData = await response.text();
-            console.log('Booking saved successfully:', responseData);
+            console.log('Booking updated successfully:', responseData);
             setBookingResult('ok');
             if (bookingResult === 'ok') {
                 setModalVisible(true);
@@ -181,18 +191,18 @@ function BookingRoomScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.navigate('ListRoomScreen', { hotel: hotel, location: location })}>
+                <TouchableOpacity onPress={() => navigation.navigate('ManageBookingScreen')}>
                     <Image
                         source={require('../../assets/icon/icon_back.png')}
                         style={styles.iconHeader}
                     />
                 </TouchableOpacity>
-                <Text style={styles.labelHeader}>Điền thông tin</Text>
+                <Text style={styles.labelHeader}>Thông tin đặt phòng</Text>
             </View>
             <ScrollView style={styles.list}>
                 <View style={styles.detail}>
                     <View>
-                        <Text style={styles.label}> {hotel.name} </Text>
+                        <Text style={styles.label}> {booking.hotel.name} </Text>
                         <View style={styles.date}>
                             <Text style={styles.dateLabel}>Nhận phòng:</Text>
                             <Button onPress={showCheckInDatePicker} title={checkInDate ? moment(checkInDate).format('DD/MM/YYYY') : 'Select date'} />
@@ -221,18 +231,18 @@ function BookingRoomScreen() {
                     </View>
                     <View style={styles.line} />
                     <View style={styles.detail}>
-                        <Text style={styles.label}> {room.name} </Text>
+                        <Text style={styles.label}> {booking.room.name} </Text>
                         <View style={styles.blockDetail}>
-                            <Text style={styles.roomDetail}>Diện tích {room.area} m²</Text>
+                            <Text style={styles.roomDetail}>Diện tích {booking.room.area} m²</Text>
                             <View style={styles.bedRoom}>
-                                {room.bigBed > 0 && <Text style={styles.roomDetail}>{room.bigBed} giường lớn</Text>}
-                                {room.bigBed > 0 && room.smallBed > 0 && <Text style={styles.roomDetail}>,</Text>}
-                                {room.smallBed > 0 && <Text style={styles.roomDetail}>{room.smallBed} giường nhỏ</Text>}
+                                {booking.room.bigBed > 0 && <Text style={styles.roomDetail}>{booking.room.bigBed} giường lớn</Text>}
+                                {booking.room.bigBed > 0 && booking.room.smallBed > 0 && <Text style={styles.roomDetail}>,</Text>}
+                                {booking.room.smallBed > 0 && <Text style={styles.roomDetail}>{booking.room.smallBed} giường nhỏ</Text>}
                             </View>
-                            <Text style={styles.roomDetail}>{room.numberPeople} người/phòng</Text>
-                            <Text style={styles.roomDetail}>{room.bathtub ? 'Có bồn tắm' : 'Vòi tắm đứng'}</Text>
+                            <Text style={styles.roomDetail}>{booking.room.numberPeople} người/phòng</Text>
+                            <Text style={styles.roomDetail}>{booking.room.bathtub ? 'Có bồn tắm' : 'Vòi tắm đứng'}</Text>
                             <Text style={styles.roomDetail}>Wifi miễn phí</Text>
-                            <Text style={styles.roomDetail}>Giá: {room.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}/đêm</Text>
+                            <Text style={styles.roomDetail}>Giá: {booking.room.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}/đêm</Text>
                         </View>
                     </View>
                 </View>
@@ -274,33 +284,35 @@ function BookingRoomScreen() {
                     <View style={styles.price}>
                         <View style={styles.priceDetail}>
                             <View>
-                                <Text style={styles.totalTimeDetail}>{shortenName(room.name, 28)} </Text>
-                                <Text style={styles.totalTimeDetail}>{calculateNumberOfDays() ? calculateNumberOfDays() : '0'} đêm</Text>
+                                <Text style={styles.totalTimeDetail}>{shortenName(booking.room.name, 28)} </Text>
+                                <Text style={styles.totalTimeDetail}>{calculateNumberOfDays() > 0 ? calculateNumberOfDays() : '0'} đêm</Text>
                             </View>
-                            <Text style={styles.priceDetailValue}>VND {calculateNumberOfDays() ? calculatePrice().toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '0'}</Text>
+                            <Text style={styles.priceDetailValue}>VND {calculateNumberOfDays() > 0 ? calculatePrice().toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '0'}</Text>
                         </View>
                         <View style={styles.priceDetail}>
                             <Text style={styles.priceDetailLabel}>Thuế và phí</Text>
-                            <Text style={styles.priceDetailValue}>VND {calculateNumberOfDays() ? calculateFee().toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '0'}</Text>
+                            <Text style={styles.priceDetailValue}>VND {calculateNumberOfDays() > 0 ? calculateFee().toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '0'}</Text>
                         </View>
                     </View>
                     <View style={styles.line} />
                     <View style={styles.totalPrice}>
                         <Text style={styles.totalPriceLabel}>Tổng cộng</Text>
-                        <Text style={styles.totalPriceValue}>VND {calculateNumberOfDays() ? (calculateFee() + calculatePrice()).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '0'}</Text>
+                        <Text style={styles.totalPriceValue}>VND {calculateNumberOfDays() > 0 ? (calculateFee() + calculatePrice()).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '0'}</Text>
                     </View>
                 </View>
-                <TouchableOpacity onPress={handleSubmit}>
-                    <View style={styles.btnSubmit}>
-                        <Text style={styles.btnLabel}> Đặt phòng</Text>
-                    </View>
-                </TouchableOpacity>
+                {booking.status === 'Chưa thanh toán' && (
+                    <TouchableOpacity onPress={handleSubmit}>
+                        <View style={styles.btnSubmit}>
+                            <Text style={styles.btnLabel}> Chỉnh sửa</Text>
+                        </View>
+                    </TouchableOpacity>
+                )}
             </ScrollView>
             <Modal visible={modalVisible} onBackdropPress={toggleModal} backdropOpacity={0.9} backdropColor="rgba(0, 0, 0, 0.6)">
                 <View style={styles.modalContainer}>
-                    <Text style={styles.modalContent}>Đặt phòng thành công, vui lòng đến trang quản lý đặt phòng để thực hiện thanh toán</Text>
+                    <Text style={styles.modalContent}>Chỉnh sửa thông tin đặt phòng thành công</Text>
                     <View style={styles.modalAction}>
-                        <TouchableOpacity onPress={() => navigation.navigate('ListRoomScreen', { hotel: hotel, location: location })}>
+                        <TouchableOpacity onPress={() => navigation.navigate('ManageBookingScreen')}>
                             <View style={styles.modalButton}>
                                 <Text style={styles.modalButtonLabel}>Quay lại</Text>
                             </View>
@@ -507,5 +519,5 @@ const styles = StyleSheet.create({
         paddingLeft: 40,
     },
 });
-export default BookingRoomScreen;
+export default UpdateBookingScreen;
 

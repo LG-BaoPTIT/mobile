@@ -1,64 +1,165 @@
 /* eslint-disable prettier/prettier */
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Footer from '../../components/Footer/Footer';
-
-const hotel = {
-    id: 1,
-    name: 'Royal Family Hotel',
-    score: 9.5,
-    rate: 5,
-    minPrice: 2000000,
-    maxPrice: 10000000,
-    comments: [{
-        id: 1,
-        content: '10 diem khong co nhung',
-        score: 10,
-        time: '10/03/2024',
-        user: {
-            name: 'Dung',
-        },
-    },
-    {
-        id: 2,
-        content: 'dich vu tot',
-        score: 9,
-        time: '11/03/2024',
-        user: {
-            name: 'Bao',
-        },
-    }],
-    describe: `Situated in Da Nang, Royal Family Hotel offers elegant and comfortable accommodation with free WiFi access throughout the property. It operates a 24-hour front desk and provides complimentary parking on site.
-    The hotel is just 2.1 km from Song Han Bridge and 2.3 km from Cham Museum. My An Beach is 2.7 km away, while Da Nang International Airport is accessible with a 5 km drive. 
-    Fitted with tiled flooring, air-conditioned rooms include a desk, wardrobe, electric kettle, minibar and a flat-screen TV with cable/satellite channels. En suite bathroom comes with shower facility, hairdryer and free toiletries.
-    At Royal Family Hotel, the friendly staff can assist guests with luggage storage, laundry services and airport shuttle arrangements. A tasty selection of local meals are served at the restaurant.`,
-    timeCheckin: '14:00',
-    timeCheckout: '12:00',
-};
-
-function evaluateHotel(score) {
-    if (score >= 9.0) { return 'Xuất sắc'; }
-    if (score >= 8.0) { return 'Tốt'; }
-    if (score >= 7.0) { return 'Tạm được'; }
-    if (score >= 5.5) { return 'Trung bình'; }
-    if (score >= 5.5) { return 'Tệ'; }
-    return 'Cực tệ';
-}
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function HotelDetailScreen() {
     const navigation = useNavigation();
     const route = useRoute();
-    const { location } = route.params;
-
+    const { location, hotelId } = route.params;
     const [showAllDescribe, setShowAllDescribe] = useState(false);
     const [showComment, setShowComment] = useState(false);
+    const [hotel, setHotel] = useState();
+    const [reviewHotel, setReviewHotel] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [newReviewContent, setNewReviewContent] = useState('');
+    const [newReviewRating, setNewReviewRating] = useState(0);
+    const [error, setError] = useState(null);
+    const [reviewError, setReviewError] = useState('');
+    const URl_API = 'http://192.168.2.24:8080';
+
     const toggleDescribe = () => {
         setShowAllDescribe(!showAllDescribe);
     };
     const toggleComment = () => {
         setShowComment(!showComment);
     };
+    useEffect(() => {
+        const fetchHotelAndReviews = async () => {
+            try {
+                const hotelResponse = await fetch(`${URl_API}/api/v1/hotel/${hotelId}`);
+                const hotelData = await hotelResponse.json();
+                setHotel(hotelData);
+
+                const reviewResponse = await fetch(`${URl_API}/api/v1/review/hotel/${hotelId}`);
+                const reviewData = await reviewResponse.json();
+                setReviewHotel(reviewData);
+
+                setIsLoading(false);
+            } catch (e) {
+                setError(e);
+                setIsLoading(false);
+            }
+        };
+
+        fetchHotelAndReviews();
+    }, [hotelId]);
+
+    const calculationAverageRating = (reviews) => {
+        if (reviews.length === 0) {
+            return 0;
+        }
+        const totalRating = reviews.reduce((acc, review) => acc + review.rating, 0);
+        const averageRating = totalRating / reviews.length;
+        return parseFloat(averageRating.toFixed(2));
+    };
+
+    function evaluateHotel(score) {
+        if (score === 0) { return 'Chưa có đánh giá từ khách hàng'; }
+        if (score >= 9.0) { return 'Xuất sắc'; }
+        if (score >= 8.0) { return 'Tốt'; }
+        if (score >= 7.0) { return 'Khá'; }
+        if (score >= 5.5) { return 'Trung bình'; }
+        if (score >= 4.0) { return 'Tệ'; }
+        return 'Cực tệ';
+    }
+
+    const shortenName = (name) => {
+        if (name.length > 20) {
+            return name.slice(0, 20 - 3) + '...';
+        } else {
+            return name;
+        }
+    };
+
+    const renderRatingOptions = () => {
+        const ratingOptions = [];
+        for (let i = 1; i <= 10; i++) {
+            ratingOptions.push(
+                <TouchableOpacity
+                    key={`rating_option_${i}`}
+                    onPress={() => setNewReviewRating(i)}
+                    // eslint-disable-next-line react-native/no-inline-styles
+                    style={[styles.ratingOption, newReviewRating === i && styles.selectedRatingOption, { backgroundColor: newReviewRating === i ? '#24BACE' : 'transparent' }]}
+                >
+                    <Text>{i}</Text>
+                </TouchableOpacity>
+            );
+        }
+        return ratingOptions;
+    };
+
+    const submitReview = async () => {
+        if (newReviewRating === null) {
+            setReviewError('Chọn mức điểm muốn đánh giá');
+            return;
+        }
+        if (newReviewContent.length === 0) {
+            setReviewError('Nhập đánh giá của bạn');
+            return;
+        }
+        const userData = await AsyncStorage.getItem('user');
+        const user = JSON.parse(userData);
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day}`;
+        const reviewRequest = {
+            userId: user.id,
+            hotelId: hotel.id,
+            content: newReviewContent,
+            rating: newReviewRating,
+            time: formattedDate,
+        };
+        console.log('ReviewRequest: ' + reviewRequest);
+
+        try {
+            const response = await fetch(`${URl_API}/api/v1/review/save`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(reviewRequest),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to save booking');
+            }
+            const newReview = {
+                content: newReviewContent,
+                rating: newReviewRating,
+                time: formattedDate,
+                user: user,
+                hotel: hotel,
+            };
+            const updateReviews = [...reviewHotel];
+            updateReviews.push(newReview);
+            setReviewHotel(updateReviews);
+            const responseData = await response.text();
+            console.log('Booking saved successfully:', responseData);
+        } catch (e) {
+            console.error('Error saving booking:', e);
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <View>
+                <Text>Loading...</Text>
+            </View>
+        );
+    }
+
+    if (error) {
+        return (
+            <View>
+                <Text>Error: {error.message}</Text>
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -68,7 +169,7 @@ function HotelDetailScreen() {
                         style={styles.icon}
                     />
                 </TouchableOpacity>
-                <Text style={styles.labelHeader}>{hotel.name} </Text>
+                <Text style={styles.labelHeader}>{shortenName(hotel.name)} </Text>
                 <TouchableOpacity onPress={() => navigation.navigate('ListRoomScreen', { hotel: hotel, location: location })}>
                     <View style={styles.selectRoom}>
                         <Text style={styles.labelSelectRoom}>Chọn phòng</Text>
@@ -102,13 +203,13 @@ function HotelDetailScreen() {
                 <View style={styles.hotelInformation}>
                     <Text style={styles.label}>Xếp hạng và đánh giá</Text>
                     <View style={styles.hotelReview}>
-                        <Text style={styles.hotelScore}>{hotel.score}</Text>
-                        <Text style={styles.hotelEvaluation}>{evaluateHotel(hotel.score)}</Text>
+                        {calculationAverageRating(reviewHotel) > 0 && <Text style={styles.hotelScore}>{calculationAverageRating(reviewHotel)}</Text>}
+                        <Text style={styles.hotelEvaluation}>{evaluateHotel(calculationAverageRating(reviewHotel))}</Text>
                     </View>
-                    <Text style={styles.totalComment}>Từ {hotel.comments.length} đánh giá</Text>
+                    <Text style={styles.totalComment}>Từ {reviewHotel.length} đánh giá</Text>
                     {showComment && <ScrollView style={styles.listComment}>
-                        {hotel.comments.map(comment => (
-                            <View key={comment.id} style={styles.commentContainer}>
+                        {reviewHotel.map(review => (
+                            <View key={review.id} style={styles.commentContainer}>
                                 <Image
                                     source={require('../../assets/hero1.jpg')}
                                     style={styles.userImage}
@@ -116,23 +217,47 @@ function HotelDetailScreen() {
                                 <View style={styles.commentDetail}>
                                     <View style={styles.comment}>
                                         <View style={styles.commentContent}>
-                                            <Text style={styles.userName}>{comment.user.name}</Text>
-                                            <Text style={styles.commentScore}>{comment.score}/10</Text>
+                                            <Text style={styles.userName}>{review.user.name}</Text>
+                                            <Text style={styles.commentScore}>{review.rating}/10</Text>
                                         </View>
-                                        <Text style={styles.commentContent}>{comment.content}</Text>
+                                        <Text style={styles.commentContent}>{review.content}</Text>
                                     </View>
-                                    <Text style={styles.commentTime}>{comment.time}</Text>
+                                    <Text style={styles.commentTime}>{review.time}</Text>
                                 </View>
                             </View>
                         ))}
                     </ScrollView>}
+                    <View style={styles.newSubmitReview}>
+                        <View style={styles.newReviewRating}>
+                            <Text style={styles.ratingLabel}>Đánh giá: </Text>
+                            <View style={styles.ratingOptionsContainer}>
+                                {renderRatingOptions()}
+                            </View>
+                        </View>
+                        <View style={styles.newReviewBottom}>
+                            <View style={styles.newReviewContent}>
+                                <TextInput
+                                    style={styles.newReviewContentValue}
+                                    onChangeText={text => setNewReviewContent(text)}
+                                    value={newReviewContent}
+                                    placeholder="Nhập nội dung đánh giá"
+                                />
+                            </View>
+                            <TouchableOpacity onPress={submitReview} style={styles.btnReview}>
+                                <Text style={styles.labelBtnReview}>Gửi đánh giá</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                    {reviewError.length > 0 && (
+                        <Text style={styles.reviewError}>{reviewError}</Text>
+                    )}
                     <TouchableOpacity onPress={toggleComment}>
                         <Text style={styles.link}>{showComment ? 'Ẩn' : 'Xem toàn bộ đánh giá'}</Text>
                     </TouchableOpacity>
                 </View>
                 <View style={styles.hotelInformation}>
                     <Text style={styles.label}>Mô tả</Text>
-                    <Text numberOfLines={showAllDescribe ? undefined : 4} style={styles.describe}>{hotel.describe}</Text>
+                    <Text numberOfLines={showAllDescribe ? undefined : 4} style={styles.describe}>{hotel.description}</Text>
                     <TouchableOpacity onPress={() => toggleDescribe()}>
                         <Text style={styles.link}>{showAllDescribe ? 'Ẩn bớt' : 'Xem chi tiết'}</Text>
                     </TouchableOpacity>
@@ -149,11 +274,11 @@ function HotelDetailScreen() {
                     <View style={styles.timeContainer}>
                         <View style={styles.timeDetail}>
                             <Text style={styles.labelDetail}>Giờ nhận phòng</Text>
-                            <Text style={styles.valueDetail}>từ {hotel.timeCheckin}</Text>
+                            <Text style={styles.valueDetail}>từ {hotel.checkIn}</Text>
                         </View>
                         <View style={styles.timeDetail}>
                             <Text style={styles.labelDetail}>Giờ trả phòng</Text>
-                            <Text style={styles.valueDetail}>trước {hotel.timeCheckout}</Text>
+                            <Text style={styles.valueDetail}>trước {hotel.checkOut}</Text>
                         </View>
                     </View>
                 </View>
@@ -180,7 +305,7 @@ const styles = StyleSheet.create({
         paddingRight: 10,
     },
     labelHeader: {
-        fontSize: 26,
+        fontSize: 24,
         fontWeight: '300',
         color: 'white',
     },
@@ -349,19 +474,78 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         color: 'black',
     },
-    userName:{
+    userName: {
         fontWeight: 'bold',
         color: 'black',
         fontSize: 16,
+        marginRight: 2,
     },
     commentScore: {
         color: '#24BAEC',
         fontSize: 14,
         fontWeight: '400',
+        textAlign: 'center',
+        marginTop: 3,
     },
     commentTime: {
         color: 'black',
         marginLeft: 10,
+    },
+    newSubmitReview: {
+        display: 'flex',
+        flexDirection: 'column',
+        marginBottom: 2,
+    },
+    newReviewBottom: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 5,
+    },
+    newReviewContent: {
+        borderWidth: 2,
+        borderColor: 'black',
+        borderRadius: 10,
+        width: 280,
+        marginRight: 10,
+        marginLeft: 2,
+    },
+    newReviewContentValue: {
+
+    },
+    newReviewRating: {
+
+    },
+    ratingLabel: {
+
+    },
+    ratingOptionsContainer: {
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    btnReview: {
+        backgroundColor: '#24BAEC',
+        borderRadius: 10,
+        padding: 10,
+        marginRight: 10,
+    },
+    labelBtnReview: {
+        color: 'black',
+        fontSize: 14,
+    },
+    ratingOption: {
+        color: 'black',
+        padding: 10,
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#24BACE',
+    },
+    selectedRatingOption: {
+        color: '#24BAEC',
+    },
+    reviewError: {
+        color: 'red',
     },
 });
 

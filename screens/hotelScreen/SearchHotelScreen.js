@@ -1,36 +1,33 @@
 /* eslint-disable prettier/prettier */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, TextInput, View, TouchableOpacity, FlatList } from 'react-native';
 import Footer from '../../components/Footer/Footer';
 import { useNavigation } from '@react-navigation/native';
-
-const data = [
-    {
-        id: 1,
-        name: 'Đà Nẵng',
-    },
-    {
-        id: 2,
-        name: 'Đà Lạt',
-    },
-    {
-        id: 3,
-        name: 'Phú Quốc',
-    },
-    {
-        id: 4,
-        name: 'Hội An',
-    },
-];
 
 function SearchHotelScreen() {
     const navigation = useNavigation();
     const [searchText, setSearchText] = useState('');
     const [suggestions, setSuggestions] = useState([]);
+    const [location, setLocations] = useState([]);
+    const URl_API = 'http://192.168.2.24:8080';
+
+    useEffect(() => {
+        fetchLocations();
+      }, []);
+
+    const fetchLocations = async () => {
+        try {
+          const response = await fetch(`${URl_API}/api/v1/location/`);
+          const data = await response.json();
+          setLocations(data); // Assuming the response data is an array of locations
+        } catch (error) {
+          console.error('Error fetching locations:', error);
+        }
+    };
 
     const handleSearch = text => {
         setSearchText(text);
-        const filtered = data.filter(item =>
+        const filtered = location.filter(item =>
             item.name.toLowerCase().includes(text.toLowerCase())
         );
         setSuggestions(filtered);

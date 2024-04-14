@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import React from 'react';
 import { StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native';
 import Footer from '../components/Footer/Footer';
@@ -16,13 +17,13 @@ function MainScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.userInfo}>
-       <View style={{flexDirection: 'row', alignItems:'center'}}>
-       <Image
-          source={require('../assets/hero2.jpg')}
-          style={styles.avatar}
-        />
-        <Text style={styles.username}>Lưu Gia Bảo</Text>
-       </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Image
+            source={require('../assets/hero2.jpg')}
+            style={styles.avatar}
+          />
+          <Text style={styles.username}>Lưu Gia Bảo</Text>
+        </View>
         <TouchableWithoutFeedback onPress={handleLogout}>
           <View style={styles.logoutButton}>
             <Image
@@ -43,7 +44,7 @@ function MainScreen() {
             <Text style={styles.navBarText}>Tìm khách sạn</Text>
           </View>
         </TouchableWithoutFeedback>
-        
+
         <TouchableWithoutFeedback onPress={() => navigation.navigate('BookFlightTickets')}>
           <View style={styles.navBarItem}>
             <Image
@@ -53,7 +54,7 @@ function MainScreen() {
             <Text style={styles.navBarText}>Đặt vé máy bay</Text>
           </View>
         </TouchableWithoutFeedback>
-        
+
         <TouchableWithoutFeedback onPress={() => navigation.navigate('MyListTickets')}>
           <View style={styles.navBarItem}>
             <Image
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 40,
     height: 40,
-    borderRadius: 20, 
+    borderRadius: 20,
   },
   username: {
     marginLeft: 10,

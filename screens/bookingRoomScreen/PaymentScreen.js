@@ -8,7 +8,7 @@ function PaymentScreen() {
     const route = useRoute();
     const { booking, price } = route.params;
     const [method, setMethod] = useState('agribank');
-
+    const URl_API = 'http://192.168.2.24:8080';
     const changeBankMethod = () => {
         setMethod('agribank');
     };
@@ -16,7 +16,24 @@ function PaymentScreen() {
     const changeMomoMethod = () => {
         setMethod('momo');
     };
-
+    const handlePaymentBooking = async (id) => {
+        try {
+            const response = await fetch(`${URl_API}/api/v1/booking/pay/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (!response.ok) {
+                throw new Error('Failed to payment booking');
+            }
+            const data = await response.text();
+            console.log(data);
+            navigation.navigate('ManageBookingScreen');
+        } catch (error) {
+            console.error('Error payment booking:', error);
+        }
+    };
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -77,7 +94,7 @@ function PaymentScreen() {
                             <View style={styles.lineInput} />
                             <View style={styles.item}>
                                 <Text style={styles.labelItem}>Nội dung</Text>
-                                <Text style={styles.valueItem}>{booking.id}</Text>
+                                <Text style={styles.valueItem}>booking room {booking.id}</Text>
                             </View>
                             <View style={styles.lineInput} />
                         </View>
@@ -109,7 +126,7 @@ function PaymentScreen() {
                             <View style={styles.lineInput} />
                             <View style={styles.item}>
                                 <Text style={styles.labelItem}>Nội dung</Text>
-                                <Text style={styles.valueItem}>{booking.id}</Text>
+                                <Text style={styles.valueItem}>booking room {booking.id}</Text>
                             </View>
                             <View style={styles.lineInput} />
                         </View>
@@ -121,7 +138,7 @@ function PaymentScreen() {
                     </View>
                 )}
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate('ManageBookingScreen', {completedBooking: booking})}>
+            <TouchableOpacity onPress={() => handlePaymentBooking(booking.id)}>
                 <View style={styles.btnPayment}>
                     <Text style={styles.btnLabel}> Hoàn tất thanh toán</Text>
                 </View>

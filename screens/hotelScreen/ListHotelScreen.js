@@ -1,52 +1,80 @@
 /* eslint-disable prettier/prettier */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Footer from '../../components/Footer/Footer';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
-const data = [
-    {
-        id: 1,
-        name: 'Royal Family Hotel',
-        score: 9.5,
-        rate: 5,
-        minPrice: 2000000,
-        maxPrice: 10000000,
-    },
-    {
-        id: 2,
-        name: 'Vinperl Da Nang',
-        score: 9.5,
-        rate: 4,
-        minPrice: 400000,
-        maxPrice: 8000000,
-    },
-    {
-        id: 3,
-        name: 'Da Nang Han River',
-        score: 9.0,
-        rate: 3,
-        minPrice: 200000,
-        maxPrice: 5000000,
-    },
-    {
-        id: 4,
-        name: 'Merry Land Hotel Danang',
-        score: 8.0,
-        rate: 3,
-        minPrice: 350000,
-        maxPrice: 6000000,
-    },
-];
+// const data = [
+//     {
+//         id: 1,
+//         name: 'Royal Family Hotel',
+//         score: 9.5,
+//         rate: 5,
+//         minPrice: 2000000,
+//         maxPrice: 10000000,
+//     },
+//     {
+//         id: 2,
+//         name: 'Vinperl Da Nang',
+//         score: 9.5,
+//         rate: 4,
+//         minPrice: 400000,
+//         maxPrice: 8000000,
+//     },
+//     {
+//         id: 3,
+//         name: 'Da Nang Han River',
+//         score: 9.0,
+//         rate: 3,
+//         minPrice: 200000,
+//         maxPrice: 5000000,
+//     },
+//     {
+//         id: 4,
+//         name: 'Merry Land Hotel Danang',
+//         score: 8.0,
+//         rate: 3,
+//         minPrice: 350000,
+//         maxPrice: 6000000,
+//     },
+// ];
 
 function ListHotelScreen() {
-
     const navigation = useNavigation();
     const route = useRoute();
     const { location, minPrice, maxPrice, selectedRatings } = route.params;
-    const hotels = data.filter(hotel => {
-        return selectedRatings.includes(hotel.rate) && !(hotel.minPrice > maxPrice) && !(hotel.maxPrice < minPrice);
-    });
+    const [hotels, setHotels] = useState([]);
+    const [filteredHotels, setFilteredHotels] = useState([]);
+    const URl_API = 'http://192.168.2.24:8080';
+
+    useEffect(() => {
+        const fetchHotelsByLocation = async () => {
+            try {
+                const response = await fetch(`${URl_API}/api/v1/hotel/location?locationId=${location.id}`);
+                const data = await response.json();
+                setHotels(data);
+            } catch (error) {
+                console.error('Error fetching hotels:', error);
+            }
+        };
+
+        fetchHotelsByLocation();
+    }, [location.id]);
+
+    useEffect(() => {
+        const filtered = hotels.filter(function (hotel) {
+            const filterByRatings = selectedRatings.includes(hotel.rate);
+
+            const filterByPrice = hotel.rooms && hotel.rooms.some(function (room) {
+                return room.price >= minPrice && room.price <= maxPrice;
+            });
+
+            return filterByRatings && filterByPrice;
+        });
+
+        setFilteredHotels(filtered);
+    }, [hotels, minPrice, maxPrice, selectedRatings]);
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -65,8 +93,8 @@ function ListHotelScreen() {
                 </TouchableOpacity>
             </View>
             <ScrollView style={styles.listHotel}>
-                {hotels.map(hotel => (
-                    <TouchableOpacity key={hotel.id} onPress={() => navigation.navigate('HotelDetailScreen', { location: location })}>
+                {filteredHotels.map(hotel => (
+                    <TouchableOpacity key={hotel.id} onPress={() => navigation.navigate('HotelDetailScreen', { location: location, hotelId: hotel.id })}>
                         <View style={styles.itemHotel}>
                             <Image
                                 source={require('../../assets/image/hotel/vinperl-da-nang.jpg')}
@@ -75,7 +103,7 @@ function ListHotelScreen() {
                             <View style={styles.hotel}>
                                 <View style={styles.hotelInfor}>
                                     <Text style={styles.hotelName}>{hotel.name}</Text>
-                                    <Text style={styles.hotelRate}>{hotel.score}</Text>
+                                    {/* <Text style={styles.hotelRate}>{hotel.score}</Text> */}
                                 </View>
                                 <View style={styles.hotelStar}>
                                     {[...Array(hotel.rate)].map((_, index) => (
@@ -97,7 +125,7 @@ function ListHotelScreen() {
                                     <Image
                                         source={require('../../assets/icon/icon_gps.png')}
                                     />
-                                    <Text style={styles.addressName}> Đà Nẵng</Text>
+                                    <Text style={styles.addressName}> {location.name}</Text>
                                 </View>
                             </View>
                         </View>
