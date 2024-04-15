@@ -142,7 +142,10 @@ function BookingRoomScreen() {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to save booking');
+                setBookingResult('Phòng không còn trống trong khoảng thời gian này');
+                console.log('đặt phòng không thành công');
+                setModalVisible(false);
+                return;
             }
 
             const responseData = await response.text();
